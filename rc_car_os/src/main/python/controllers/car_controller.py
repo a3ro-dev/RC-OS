@@ -18,4 +18,7 @@ class carController:
     def regenerate(self):
         pass
 
-    
+    def stop(self):
+        pass
+
+
