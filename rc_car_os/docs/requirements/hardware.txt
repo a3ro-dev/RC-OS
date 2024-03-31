@@ -1,0 +1,8 @@
+4 DC Motor
+1 RC Car Chassis
+1 Motor Driver (compatible with DC Motor)L289N
+1 Web Browser Enabled Device
+1 Battery Pack (compatible with DC Moto)
+Various Wires and Connectors
+1 Raspberry Pi
+1 WiFi Module ESP32
