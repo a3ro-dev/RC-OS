@@ -3,7 +3,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./rc_car_os",
+        ".",
         "-p",
         "*test*.py"
     ],
