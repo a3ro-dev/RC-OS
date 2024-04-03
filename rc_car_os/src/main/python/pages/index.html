@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Remote Control</title>
     <style>
         body {
             display: flex;
@@ -67,11 +67,20 @@
 </head>
 <body>
     <div class="button-container">
-        <button id="forward">Forward</button>
-        <button id="left">Left</button>
-        <button id="stop">Stop</button>
-        <button id="right">Right</button>
-        <button id="backward">Backward</button>
+        <button id="forward" onmousedown="buttonDown('forward')" onmouseup="buttonUp()">Forward</button>
+        <button id="left" onmousedown="buttonDown('left')" onmouseup="buttonUp()">Left</button>
+        <button id="stop" onmousedown="buttonDown('stop')" onmouseup="buttonUp()">Stop</button>
+        <button id="right" onmousedown="buttonDown('right')" onmouseup="buttonUp()">Right</button>
+        <button id="backward" onmousedown="buttonDown('backward')" onmouseup="buttonUp()">Backward</button>
     </div>
+    <script>
+        function buttonDown(direction) {
+            fetch(`/${direction}`, { method: 'POST' });
+        }
+
+        function buttonUp() {
+            fetch('/stop', { method: 'POST' });
+        }
+    </script>
 </body>
 </html>
