@@ -1,10 +1,16 @@
 import socket
 from time import sleep
 from machine import Pin, PWM
-
 import network
 
 def connect_to_wifi(ssid, password):
+    """
+    Connects the device to a WiFi network.
+
+    Args:
+        ssid (str): The SSID of the WiFi network.
+        password (str): The password of the WiFi network.
+    """
     # Initialize the WiFi station interface
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
@@ -24,7 +30,13 @@ def connect_to_wifi(ssid, password):
 connect_to_wifi('a3rodev', 'a3rodev')
 
 class Controller:
+    """
+    A class used to control a device with a L298N motor driver and a servo motor.
+    """
     def __init__(self):
+        """
+        Initializes the Controller class with the pins connected to the L298N and the servo motor.
+        """
         # Define the pins connected to the L298N
         # Replace with the actual pins you're using
         self.IN1 = Pin(0, Pin.OUT)
@@ -36,26 +48,42 @@ class Controller:
         self.servo.duty_u16(32767)  # Set to middle position
 
     def move_forward(self):
+        """
+        Moves the device forward.
+        """
         self.IN1.high()
         self.IN2.low()
 
     def move_backward(self):
+        """
+        Moves the device backward.
+        """
         self.IN1.low()
         self.IN2.high()
 
     def turn_left(self):
+        """
+        Turns the device to the left.
+        """
         # Set the duty cycle to move the servo to the left
         self.servo.duty_u16(13107)  # 20% duty cycle
 
     def turn_right(self):
+        """
+        Turns the device to the right.
+        """
         # Set the duty cycle to move the servo to the right
         self.servo.duty_u16(52428)  # 80% duty cycle
 
     def stop(self):
+        """
+        Stops the device.
+        """
         self.IN1.low()
         self.IN2.low()
         self.servo.duty_u16(32767)  # Set to middle position
 
+# HTML for the remote control interface
 html = """
 <!DOCTYPE html>
 <html lang="en">
@@ -149,9 +177,19 @@ html = """
 """
 
 def handle_request(request):
+    """
+    Handles HTTP requests and controls the device based on the request.
+
+    Args:
+        request (str): The HTTP request.
+
+    Returns:
+        str: The HTTP response.
+    """
     lines = request.split('\n')
     method, path, _ = lines[0].split(' ')
 
+    # If the request is a POST request, control the device based on the path
     if method == 'POST':
         if path == '/forward':
             controller.move_forward()
@@ -164,8 +202,10 @@ def handle_request(request):
         elif path == '/stop':
             controller.stop()
 
+    # Return the HTTP response with the remote control interface
     return 'HTTP/1.1 200 OK\n\n' + html
 
+# Initialize the Controller class
 controller = Controller()
 s = socket.socket()
 
@@ -173,6 +213,7 @@ s = socket.socket()
 s.bind(('0.0.0.0', 80))
 s.listen(1)
 
+# Continuously accept and handle HTTP requests
 while True:
     conn, addr = s.accept()
     request = conn.recv(1024).decode('utf-8')
