@@ -70,6 +70,9 @@ html = """
             align-items: center;
             height: 100vh;
             margin: 0;
+            background-color: #333;
+            color: #fff;
+            font-family: Arial, sans-serif;
         }
 
         .button-container {
