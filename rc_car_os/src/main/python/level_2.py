@@ -2,8 +2,12 @@ import socket
 from time import sleep
 from machine import Pin, PWM
 import network
+import time
 
 WLAN = network.WLAN(network.STA_IF)
+
+# Define the onboard LED
+led = Pin(2, Pin.OUT)  # Adjust the pin number as needed for your board
 
 def connect_to_wifi(ssid, password):
     WLAN.active(True)
@@ -11,32 +15,33 @@ def connect_to_wifi(ssid, password):
         print('Connecting to network...')
         WLAN.connect(ssid, password)
         while not WLAN.isconnected():
-            sleep(0.1)  # Add a small delay to reduce CPU usage
+            led.value(not led.value())  # Toggle the LED state
+            time.sleep(0.1)  # Blink every 0.5 seconds
+    else:
+        led.value(1)  # Turn on the LED when connected
     print('Network config:', WLAN.ifconfig())
 
 class Controller:
     def __init__(self):
         self.IN1 = Pin(0, Pin.OUT)
         self.IN2 = Pin(1, Pin.OUT)
-        self.IN3 = Pin(2, Pin.OUT)
-        self.IN4 = Pin(3, Pin.OUT)
-        self.servo = PWM(Pin(4))
+        self.servo = PWM(Pin(16))
         self.servo.freq(50)
         self.servo.duty_u16(int(1000 / 20000 * 65535))  # Set initial position to 0 degrees
+
+    def set_servo_to_zero(self):
+        print('Setting servo to 0 degrees')
+        self.servo.duty_u16(int(1000 / 20000 * 65535))  # Set position to 0 degrees
 
     def move_forward(self):
         print('Moving forward')
         self.IN1.high()
         self.IN2.low()
-        self.IN3.high()
-        self.IN4.low()
 
     def move_backward(self):
         print('Moving backward')
         self.IN1.low()
         self.IN2.high()
-        self.IN3.low()
-        self.IN4.high()
 
     def turn_left(self):
         print('Turning left')
@@ -50,9 +55,52 @@ class Controller:
         print('Stopped')
         self.IN1.low()
         self.IN2.low()
-        self.IN3.low()
-        self.IN4.low()
         self.servo.duty_u16(int(1500 / 20000 * 65535))  # Set position back to 90 degrees
+    
+    def perform_donut(self):
+        print('Performing donut')
+        self.set_servo_to_zero()  # Set the steering to the center position
+    
+        self.move_forward()  # Begin driving forward
+        time.sleep(1)  # Wait for stability
+    
+        # Initiate the donut maneuver
+        self.turn_left()  # Turn the steering to the left (adjust as needed)
+        time.sleep(0.5)  # Adjust as needed for timing
+    
+        # Maintain the donut for 10 seconds
+        start_time = time.time()  # Get the current time
+        while time.time() - start_time < 10:  # Keep going for 10 seconds
+            # Adjust steering angle to maintain rotation
+            # You may need to fine-tune this value for your specific setup
+            self.servo.duty_u16(int(1500 / 20000 * 65535))  # Set position to a specific angle
+            time.sleep(0.1)  # Adjust as needed for timing
+    
+        # End the donut
+        self.set_servo_to_zero()  # Return the steering to the center position
+        self.stop()  # Stop the car
+
+    def perform_s_drift(self):
+        print('Performing S-drift')
+        self.set_servo_to_zero()  # Set the steering to the center position
+
+        self.move_forward()  # Begin driving forward
+        time.sleep(0.5)  # Wait for stability
+
+        # Initiate the S-drift maneuver
+        self.turn_left()  # Turn the steering to the left (adjust as needed)
+        time.sleep(0.5)  # Adjust as needed for timing
+
+        # Perform the S-drift
+        for _ in range(5):  # Adjust the number of iterations for the desired length of the S-drift
+            self.turn_right()  # Turn the steering to the right
+            time.sleep(0.1)  # Adjust as needed for timing
+            self.turn_left()  # Turn the steering to the left
+            time.sleep(0.1)  # Adjust as needed for timing
+
+        # End the S-drift
+        self.set_servo_to_zero()  # Return the steering to the center position
+        self.stop()  # Stop the car
 
 html = """
 <!DOCTYPE html>
@@ -132,6 +180,13 @@ html = """
         <button id="stop" onmousedown="buttonDown('stop')" onmouseup="buttonUp()">Stop</button>
         <button id="right" onmousedown="buttonDown('right')" onmouseup="buttonUp()">Right</button>
         <button id="backward" onmousedown="buttonDown('backward')" onmouseup="buttonUp()">Backward</button>
+        <h2 style="text-align: center; margin-top: 50px;">Stunts 🚗💨</h2>
+        <div class="button-container"></div>
+            <button id="s-drift" onmousedown="buttonDown('s-drift')" onmouseup="buttonUp()" style="background-color: grey;">🌀 S-Drift</button>
+            <button id="donut" onmousedown="buttonDown('donut')" onmouseup="buttonUp()" style="background-color: grey;">🍩 Donut</button>
+            <button id="reverse-donut" onmousedown="buttonDown('reverse-donut')" onmouseup="buttonUp()" style="background-color: grey;">↩️ Reverse Donut</button>
+            <button id="normal-drift" onmousedown="buttonDown('normal-drift')" onmouseup="buttonUp()" style="background-color: grey;">⏱️ Normal 4 second drift</button>
+        </div>
     </div>
     <script>
         function buttonDown(direction) {
@@ -217,6 +272,18 @@ def handle_request(request):
             elif path == '/stop':
                 controller.stop()
                 message = 'Stopped'
+            elif path == '/s-drift':
+                controller.perform_s_drift()
+                message = 'Performing S-Drift'
+            elif path == '/donut':
+                controller.perform_donut()
+                message = 'Performing Donut'
+            # elif path == '/reverse-donut':
+            #     controller.perform_reverse_donut()
+            #     message = 'Performing Reverse Donut'
+            # elif path == '/normal-drift':
+            #     controller.perform_normal_drift()
+            #     message = 'Performing Normal 4 second drift'
         except Exception as e:
             status_code = '500 Internal Server Error'
             message = str(e)
@@ -224,7 +291,8 @@ def handle_request(request):
 
 controller = Controller()
 s = socket.socket()
-s.bind(('0.0.0.0', 80))
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Add this line
+s.bind(('0.0.0.0', 8000))
 connect_to_wifi('vijayprakashsinghkushwaha2.4ghz', '9696949718')
 s.listen(1)  # Listen for connections
 print("Server Up and Running")

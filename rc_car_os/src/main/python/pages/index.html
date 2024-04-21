@@ -17,96 +17,118 @@
         }
 
         .button-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+            display: grid;
+            grid-template-areas:
+                ". forward ."
+                "left stop right"
+                ". backward .";
+            gap: 10px;
         }
 
-        #throttle {
-            width: 80%;
-            max-width: 300px;
-            height: 50px;
-            appearance: none;
-            outline: none;
-            background: #444;
-            border-radius: 25px;
-            overflow: hidden;
-            padding: 10px;
-            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease 0s;
-        }
-
-        #throttle::-webkit-slider-thumb {
-            appearance: none;
-            width: 30px;
-            height: 30px;
-            background: #4CAF50;
-            border-radius: 50%;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            background-color: #4CAF50;
             cursor: pointer;
             box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease 0s;
         }
 
-        #throttle::-webkit-slider-thumb:active {
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:active {
             transform: scale(0.95);
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
         }
 
-        #throttle::-webkit-slider-thumb:hover {
-            background-color: #45a049;
+        #forward {
+            grid-area: forward;
         }
 
-        #steering {
-            width: 80%;
-            max-width: 300px;
-            height: 300px;
-            background: url('https://media.discordapp.net/attachments/1207016126890905612/1225013668622762094/steering_wheel.png?ex=661f95e2&is=660d20e2&hm=2cbf79998ff7972ef0ab117fddc71b6090415c101e8a0ee08da06554ea17277c&=&format=webp&quality=lossless&width=670&height=670') no-repeat;
-            background-size: contain;
-            cursor: pointer;
-            transition: transform 0.3s ease-in-out;
+        #backward {
+            grid-area: backward;
+        }
+
+        #left {
+            grid-area: left;
+        }
+
+        #right {
+            grid-area: right;
+        }
+
+        #stop {
+            grid-area: stop;
+            background-color: red;
         }
     </style>
 </head>
 <body>
     <div class="button-container">
-        <div id="steering" onmousedown="steer(event)" onmouseup="stopSteering()"></div>
-        <input type="range" min="0" max="2" value="1" id="throttle" orient="horizontal">
+        <button id="forward" onmousedown="buttonDown('forward')" onmouseup="buttonUp()">Forward</button>
+        <button id="left" onmousedown="buttonDown('left')" onmouseup="buttonUp()">Left</button>
+        <button id="stop" onmousedown="buttonDown('stop')" onmouseup="buttonUp()">Stop</button>
+        <button id="right" onmousedown="buttonDown('right')" onmouseup="buttonUp()">Right</button>
+        <button id="backward" onmousedown="buttonDown('backward')" onmouseup="buttonUp()">Backward</button>
     </div>
     <script>
-        const throttle = document.getElementById('throttle');
-        const steering = document.getElementById('steering');
-
-        throttle.addEventListener('input', function() {
-            switch(this.value) {
-                case '0':
-                    buttonDown('backward');
-                    break;
-                case '1':
-                    buttonDown('stop');
-                    break;
-                case '2':
-                    buttonDown('forward');
-                    break;
-            }
-        });
-
-        function steer(event) {
-            const rect = steering.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const direction = x < rect.width / 2 ? 'left' : 'right';
-            buttonDown(direction);
-            steering.style.transform = `rotate(${direction === 'left' ? '-45deg' : '45deg'})`;
-        }
-
-        function stopSteering() {
-            buttonDown('stop');
-            steering.style.transform = 'rotate(0deg)';
-        }
-
         function buttonDown(direction) {
             fetch(`/${direction}`, { method: 'POST' });
         }
+    
+        function buttonUp() {
+            fetch('/stop', { method: 'POST' });
+        }
+    
+        window.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'w':
+                case 'W':
+                    buttonDown('forward');
+                    break;
+                case 's':
+                case 'S':
+                    buttonDown('backward');
+                    break;
+                case 'a':
+                case 'A':
+                    buttonDown('left');
+                    break;
+                case 'd':
+                case 'D':
+                    buttonDown('right');
+                    break;
+            }
+        });
+    
+        window.addEventListener('keyup', function(event) {
+            switch(event.key) {
+                case 'w':
+                case 'W':
+                case 's':
+                case 'S':
+                case 'a':
+                case 'A':
+                case 'd':
+                case 'D':
+                    buttonUp();
+                    break;
+            }
+        });
+    </script>
+    <script>
+        function buttonDown(direction) {
+            fetch(`/${direction}`, { method: 'POST' });
+        }
+
+        function buttonUp() {
+            fetch('/stop', { method: 'POST' });
+        }
     </script>
 </body>
-</html> 
+</html>
