@@ -21,4 +21,4 @@ def connect_to_wifi(ssid, password):
     print('Network config:', wlan.ifconfig())
 
 # Replace with your network's SSID and password
-connect_to_wifi('a3rodev', 'a3rodev')
+connect_to_wifi('a3rodev', 'a3rodev')6678

@@ -3,87 +3,57 @@ from time import sleep
 from machine import Pin, PWM
 import network
 
+WLAN = network.WLAN(network.STA_IF)
+
 def connect_to_wifi(ssid, password):
-    """
-    Connects the device to a WiFi network.
-
-    Args:
-        ssid (str): The SSID of the WiFi network.
-        password (str): The password of the WiFi network.
-    """
-    # Initialize the WiFi station interface
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-
-    # If not already connected, then connect
-    if not wlan.isconnected():
+    WLAN.active(True)
+    if not WLAN.isconnected():
         print('Connecting to network...')
-        wlan.connect(ssid, password)
-
-        # Wait for the board to connect to the WiFi
-        while not wlan.isconnected():
-            pass
-
-    print('Network config:', wlan.ifconfig())
-
-# Replace with your network's SSID and password
-connect_to_wifi('a3rodev', 'a3rodev')
+        WLAN.connect(ssid, password)
+        while not WLAN.isconnected():
+            sleep(0.1)  # Add a small delay to reduce CPU usage
+    print('Network config:', WLAN.ifconfig())
 
 class Controller:
-    """
-    A class used to control a device with a L298N motor driver and a servo motor.
-    """
     def __init__(self):
-        """
-        Initializes the Controller class with the pins connected to the L298N and the servo motor.
-        """
-        # Define the pins connected to the L298N
-        # Replace with the actual pins you're using
         self.IN1 = Pin(0, Pin.OUT)
         self.IN2 = Pin(1, Pin.OUT)
-        self.servo = PWM(Pin(2))
-
-        # Set the frequency and duty cycle of the servo motor
+        self.IN3 = Pin(2, Pin.OUT)
+        self.IN4 = Pin(3, Pin.OUT)
+        self.servo = PWM(Pin(4))
         self.servo.freq(50)
-        self.servo.duty_u16(32767)  # Set to middle position
+        self.servo.duty_u16(int(1000 / 20000 * 65535))  # Set initial position to 0 degrees
 
     def move_forward(self):
-        """
-        Moves the device forward.
-        """
+        print('Moving forward')
         self.IN1.high()
         self.IN2.low()
+        self.IN3.high()
+        self.IN4.low()
 
     def move_backward(self):
-        """
-        Moves the device backward.
-        """
+        print('Moving backward')
         self.IN1.low()
         self.IN2.high()
+        self.IN3.low()
+        self.IN4.high()
 
     def turn_left(self):
-        """
-        Turns the device to the left.
-        """
-        # Set the duty cycle to move the servo to the left
-        self.servo.duty_u16(13107)  # 20% duty cycle
+        print('Turning left')
+        self.servo.duty_u16(int(1000 / 20000 * 65535))  # Set position to 0 degrees
 
     def turn_right(self):
-        """
-        Turns the device to the right.
-        """
-        # Set the duty cycle to move the servo to the right
-        self.servo.duty_u16(52428)  # 80% duty cycle
+        print('Turning right')
+        self.servo.duty_u16(int(2000 / 20000 * 65535))  # Set position to 180 degrees
 
     def stop(self):
-        """
-        Stops the device.
-        """
+        print('Stopped')
         self.IN1.low()
         self.IN2.low()
-        self.servo.duty_u16(32767)  # Set to middle position
+        self.IN3.low()
+        self.IN4.low()
+        self.servo.duty_u16(int(1500 / 20000 * 65535))  # Set position back to 90 degrees
 
-# HTML for the remote control interface
 html = """
 <!DOCTYPE html>
 <html lang="en">
@@ -167,6 +137,51 @@ html = """
         function buttonDown(direction) {
             fetch(`/${direction}`, { method: 'POST' });
         }
+    
+        function buttonUp() {
+            fetch('/stop', { method: 'POST' });
+        }
+    
+        window.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'w':
+                case 'W':
+                    buttonDown('forward');
+                    break;
+                case 's':
+                case 'S':
+                    buttonDown('backward');
+                    break;
+                case 'a':
+                case 'A':
+                    buttonDown('left');
+                    break;
+                case 'd':
+                case 'D':
+                    buttonDown('right');
+                    break;
+            }
+        });
+    
+        window.addEventListener('keyup', function(event) {
+            switch(event.key) {
+                case 'w':
+                case 'W':
+                case 's':
+                case 'S':
+                case 'a':
+                case 'A':
+                case 'd':
+                case 'D':
+                    buttonUp();
+                    break;
+            }
+        });
+    </script>
+    <script>
+        function buttonDown(direction) {
+            fetch(`/${direction}`, { method: 'POST' });
+        }
 
         function buttonUp() {
             fetch('/stop', { method: 'POST' });
@@ -177,46 +192,48 @@ html = """
 """
 
 def handle_request(request):
-    """
-    Handles HTTP requests and controls the device based on the request.
-
-    Args:
-        request (str): The HTTP request.
-
-    Returns:
-        str: The HTTP response.
-    """
     lines = request.split('\n')
-    method, path, _ = lines[0].split(' ')
-
-    # If the request is a POST request, control the device based on the path
+    first_line = lines[0].split(' ')
+    if len(first_line) >= 3:
+        method, path, _ = first_line
+    else:
+        method, path = first_line[0], ''
+    status_code = '200 OK'
+    message = ''
     if method == 'POST':
-        if path == '/forward':
-            controller.move_forward()
-        elif path == '/backward':
-            controller.move_backward()
-        elif path == '/left':
-            controller.turn_left()
-        elif path == '/right':
-            controller.turn_right()
-        elif path == '/stop':
-            controller.stop()
+        try:
+            if path == '/forward':
+                controller.move_forward()
+                message = 'Moving forward'
+            elif path == '/backward':
+                controller.move_backward()
+                message = 'Moving backward'
+            elif path == '/left':
+                controller.turn_left()
+                message = 'Turning left'
+            elif path == '/right':
+                controller.turn_right()
+                message = 'Turning right'
+            elif path == '/stop':
+                controller.stop()
+                message = 'Stopped'
+        except Exception as e:
+            status_code = '500 Internal Server Error'
+            message = str(e)
+    return f'HTTP/1.1 {status_code}\n\n{message}\n{html}'
 
-    # Return the HTTP response with the remote control interface
-    return 'HTTP/1.1 200 OK\n\n' + html
-
-# Initialize the Controller class
 controller = Controller()
 s = socket.socket()
-
-# Bind the socket to your local IP address and a port
 s.bind(('0.0.0.0', 80))
-s.listen(1)
+connect_to_wifi('vijayprakashsinghkushwaha2.4ghz', '9696949718')
+s.listen(1)  # Listen for connections
+print("Server Up and Running")
+ip_address = WLAN.ifconfig()[0]
+print('IP:', ip_address)
 
-# Continuously accept and handle HTTP requests
 while True:
     conn, addr = s.accept()
     request = conn.recv(1024).decode('utf-8')
     response = handle_request(request)
     conn.send(response.encode('utf-8'))
-    conn.close()
+    conn.close()  # Add a small delay to reduce CPU usage
