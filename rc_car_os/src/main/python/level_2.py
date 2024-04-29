@@ -7,7 +7,7 @@ import time
 WLAN = network.WLAN(network.STA_IF)
 
 # Define the onboard LED
-led = Pin(2, Pin.OUT)  # Adjust the pin number as needed for your board
+led = Pin(15, Pin.OUT)  # Adjust the pin number as needed for your board
 
 def connect_to_wifi(ssid, password):
     WLAN.active(True)
@@ -61,8 +61,9 @@ class Controller:
         print('Performing donut')
         self.set_servo_to_zero()  # Set the steering to the center position
     
+        sleep(0.5)  # Wait for stability
         self.move_forward()  # Begin driving forward
-        time.sleep(1)  # Wait for stability
+        sleep(0.5)  # Wait for stability
     
         # Initiate the donut maneuver
         self.turn_left()  # Turn the steering to the left (adjust as needed)
@@ -247,14 +248,15 @@ html = """
 """
 
 def handle_request(request):
+    status_code = '200 OK'
+    message = ''
     lines = request.split('\n')
     first_line = lines[0].split(' ')
     if len(first_line) >= 3:
         method, path, _ = first_line
     else:
         method, path = first_line[0], ''
-    status_code = '200 OK'
-    message = ''
+
     if method == 'POST':
         try:
             if path == '/forward':
@@ -291,7 +293,7 @@ def handle_request(request):
 
 controller = Controller()
 s = socket.socket()
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Add this line
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
 s.bind(('0.0.0.0', 8000))
 connect_to_wifi('vijayprakashsinghkushwaha2.4ghz', '9696949718')
 s.listen(1)  # Listen for connections
@@ -304,4 +306,7 @@ while True:
     request = conn.recv(1024).decode('utf-8')
     response = handle_request(request)
     conn.send(response.encode('utf-8'))
-    conn.close()  # Add a small delay to reduce CPU usage
+    conn.close()  # Close the connection
+    time.sleep(0.5)
+
+

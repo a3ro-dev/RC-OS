@@ -1,4 +1,4 @@
-4 DC Motor
+2 or 1 rwd Motor
 1 Servo Motor
 1 RC Car Chassis
 1 Motor Driver (compatible with DC Motor)L289N
