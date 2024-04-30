@@ -25,12 +25,9 @@ To set up this operating system on your RC car, you will need the following hard
 
 1. **Prepare the Hardware**: Connect the DC motors to the motor driver, and connect the motor driver to the Raspberry Pi Pico. Connect the servo motor to the appropriate pins on the Raspberry Pi Pico. Ensure that all connections are secure.
 
-2. **Clone the Repository**: Clone this repository to your local machine using the following command in your terminal:
-    ```bash
-    git clone github.com/a3ro-dev/RC-OS/
-    ```
+2. **Download the latest release from release tab**: Download the latest release from the release tab and extract the files.
 
-3. **Compile the Source Code**: Navigate to the directory containing the source code (`level_2.py`) and compile it. Use thonny or any other MicroPico Extension(vscode) to compile the code.
+3. **Compile the Source Code**: Navigate to the directory containing the source code and compile it. Use thonny or any other MicroPico Extension(vscode) to compile the code.
 
 4. **Transfer the Compiled Code**: Transfer the compiled code to the Raspberry Pi Pico.
 
