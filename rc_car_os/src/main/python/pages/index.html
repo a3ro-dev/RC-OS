@@ -11,9 +11,19 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #333;
+            background-color: #1a1a1a;
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .button-container {
@@ -22,19 +32,20 @@
                 ". forward ."
                 "left stop right"
                 ". backward .";
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 15px 30px;
+            font-size: 18px;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             color: white;
             background-color: #4CAF50;
             cursor: pointer;
-            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease 0s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
 
         button:hover {
@@ -43,7 +54,7 @@
 
         button:active {
             transform: scale(0.95);
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
 
         #forward {
@@ -64,27 +75,73 @@
 
         #stop {
             grid-area: stop;
-            background-color: red;
+            background-color: #e74c3c;
+        }
+
+        .stunts-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .stunts-container button {
+            background-color: #3498db;
+        }
+
+        .stunts-container button:hover {
+            background-color: #2980b9;
+        }
+
+        .stunts-container button:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            margin: 20px 0;
+            font-size: 24px;
+            color: #f39c12;
         }
     </style>
 </head>
 <body>
-    <div class="button-container">
-        <button id="forward" onmousedown="buttonDown('forward')" onmouseup="buttonUp()">Forward</button>
-        <button id="left" onmousedown="buttonDown('left')" onmouseup="buttonUp()">Left</button>
-        <button id="stop" onmousedown="buttonDown('stop')" onmouseup="buttonUp()">Stop</button>
-        <button id="right" onmousedown="buttonDown('right')" onmouseup="buttonUp()">Right</button>
-        <button id="backward" onmousedown="buttonDown('backward')" onmouseup="buttonUp()">Backward</button>
+    <div class="dashboard">
+        <div class="button-container">
+            <button id="forward" onmousedown="buttonDown('forward')" onmouseup="buttonUp()">Forward</button>
+            <button id="left" onmousedown="buttonDown('left')" onmouseup="buttonUp()">Left</button>
+            <button id="stop" onmousedown="buttonDown('stop')" onmouseup="buttonUp()">Stop</button>
+            <button id="right" onmousedown="buttonDown('right')" onmouseup="buttonUp()">Right</button>
+            <button id="backward" onmousedown="buttonDown('backward')" onmouseup="buttonUp()">Backward</button>
+        </div>
+        <h2>Stunts 🚗💨</h2>
+        <div class="stunts-container">
+            <button id="s-drift" onmousedown="buttonDown('s-drift')" onmouseup="buttonUp()">🌀 S-Drift</button>
+            <button id="donut" onmousedown="buttonDown('donut')" onmouseup="buttonUp()">🍩 Donut</button>
+            <button id="reverse-donut" onmousedown="buttonDown('reverse-donut')" onmouseup="buttonUp()">↩️ Reverse Donut</button>
+            <button id="normal-drift" onmousedown="buttonDown('normal-drift')" onmouseup="buttonUp()">⏱️ Normal Drift</button>
+            <button id="line-following" onclick="toggleLineFollowing()">🚗 Line Following</button>
+        </div>
     </div>
     <script>
         function buttonDown(direction) {
             fetch(`/${direction}`, { method: 'POST' });
         }
-    
+
         function buttonUp() {
             fetch('/stop', { method: 'POST' });
         }
-    
+
+        function toggleLineFollowing() {
+            const button = document.getElementById('line-following');
+            if (button.textContent.includes('LF-On')) {
+                button.textContent = '🚗 Line Following';
+                fetch('/LF-Off', { method: 'POST' });
+            } else {
+                button.textContent = '🚗 Line Following (LF-On)';
+                fetch('/LF-On', { method: 'POST' });
+            }
+        }
+
         window.addEventListener('keydown', function(event) {
             switch(event.key) {
                 case 'w':
@@ -105,7 +162,7 @@
                     break;
             }
         });
-    
+
         window.addEventListener('keyup', function(event) {
             switch(event.key) {
                 case 'w':
@@ -120,15 +177,6 @@
                     break;
             }
         });
-    </script>
-    <script>
-        function buttonDown(direction) {
-            fetch(`/${direction}`, { method: 'POST' });
-        }
-
-        function buttonUp() {
-            fetch('/stop', { method: 'POST' });
-        }
     </script>
 </body>
 </html>
