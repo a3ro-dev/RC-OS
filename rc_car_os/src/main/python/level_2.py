@@ -409,8 +409,8 @@ class Controller:
 
     def __init__(self):
         # Initialize motor control pins
-        self.IN1 = Pin(5, Pin.OUT)  # Motor control pin 1
-        self.IN2 = Pin(2, Pin.OUT)  # Motor control pin 2
+        self.IN1 = Pin(2, Pin.OUT)  # Motor control pin 1
+        self.IN2 = Pin(4, Pin.OUT)  # Motor control pin 2
         
         # Initialize servo motor
         self.servo = PWM(Pin(21))  # GPIO pin for servo control
