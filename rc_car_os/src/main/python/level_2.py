@@ -521,8 +521,8 @@ class LineFollower(Controller):
         # Ultrasonic sensor pins
         self.front_left_trigger = Pin(15, Pin.OUT)
         self.front_left_echo = Pin(4, Pin.IN)
-        self.front_right_trigger = Pin(16, Pin.OUT)
-        self.front_right_echo = Pin(17, Pin.IN)
+        self.front_right_trigger = Pin(23, Pin.OUT)
+        self.front_right_echo = Pin(22, Pin.IN)
 
         # PID control parameters
         self.kp = 0.5  # Proportional gain
