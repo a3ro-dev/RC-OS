@@ -191,7 +191,7 @@ import time  # Time functions
 from neopixel import NeoPixel  # Control for WS2812 LED strip
 
 # Pin setup for NeoPixel (WS2812) LED ring
-LED_PIN = 13  # GPIO pin for the WS2812 LEDs
+LED_PIN = 19  # GPIO pin for the WS2812 LEDs
 NUM_Px = 8  # Number of pixels on the NeoPixel LED strip
 led_ring = NeoPixel(Pin(LED_PIN), NUM_Px)
 
