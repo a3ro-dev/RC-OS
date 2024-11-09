@@ -268,6 +268,9 @@ class EnhancedLineFollower(Controller):
     def __init__(self, logger):
         super().__init__(logger)
 
+        # # pseudo logger init
+        # self.logger = logger
+
         # Enhanced sensor processing
         self.sensor_array = SensorArray([self.S1, self.S2, self.S3, self.S4, self.S5])
 
@@ -278,7 +281,7 @@ class EnhancedLineFollower(Controller):
 
         # PID optimization
         self.pid_optimizer = PIDOptimizer()
-        self.error_history = deque(maxlen=100)
+        self.error_history = deque([], 100)
 
         # Motion smoothing
         self.last_steering = self.SERVO_MID_DUTY
@@ -581,31 +584,35 @@ class Logger:
                 log_file.writelines(self.buffer)
             self.buffer = []
         except Exception as e:
-            # In a real scenario, consider how to handle logging failures
+            # In a real scenario, consider how to handle logging failures, but im leaving it cuz lazy.
             pass
 
     def error(self, message):
         self.log('ERROR', message)
+        print(f'ERROR: {message}')
 
     def debug(self, message):
         self.log('DEBUG', message)
+        print(f'DEBUG: {message}')
 
     def info(self, message):
         self.log('INFO', message)
+        print(f'INFO: {message}')
 
     def __del__(self):
         # Ensure all logs are flushed on deletion
         self.flush()
 
-# Initialize Logger and EnhancedLineFollower
-logger = Logger('car_log.txt')
-car = EnhancedLineFollower(logger)
-logger.info('Starting enhanced line following')
+# Initialize Logger and 
+llogger = Logger('car_log.txt')
+llogger.info('Starting enhanced line following')
+car = EnhancedLineFollower(logger=llogger)
+llogger.info('Starting enhanced line following')
 
 try:
     car.follow_line()
 except KeyboardInterrupt:
     car.shutdown()
 except Exception as e:
-    logger.error(f"Unhandled exception: {e}")
+    llogger.error(f"Unhandled exception: {e}")
     car.shutdown()
