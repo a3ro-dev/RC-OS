@@ -1,6 +1,6 @@
 import time
 from machine import Pin, PWM
-from collections import deque
+from ucollections import deque
 
 class Controller:
 
@@ -14,7 +14,7 @@ class Controller:
         self.IN1 = Pin(2, Pin.OUT)  # Motor control pin 1
         self.IN2 = Pin(4, Pin.OUT)  # Motor control pin 2
 
-        self.servo = PWM(Pin(18))  # Servo control on GPIO 19
+        self.servo = PWM(Pin(18))  # Servo control on GPIO 18
         self.servo.freq(50)
 
         # Line sensor pins
@@ -23,7 +23,6 @@ class Controller:
         self.S3 = Pin(14, Pin.IN)
         self.S4 = Pin(27, Pin.IN)
         self.S5 = Pin(26, Pin.IN)
-        self.NEAR = Pin(25, Pin.IN)  # NEAR IR sensor for obstacles
 
         self.set_servo_to_zero()
 
@@ -45,7 +44,7 @@ class Controller:
         self.logger.info('Stopping motors')
         self.IN1.value(0)
         self.IN2.value(0)
-        self.servo.duty_u16(self.SERVO_MID_DUTY)
+        # self.servo.duty_u16(self.SERVO_MID_DUTY)
 
     def brake_motor(self):
         self.logger.info('Braking motor')
@@ -53,9 +52,10 @@ class Controller:
         self.IN2.value(1)
 
     def stop_and_brake(self):
-        self.stop()
-        time.sleep_ms(100)  # 100 ms delay
-        self.brake_motor()
+        # self.stop()
+        # time.sleep_ms(100)  # 100 ms delay
+        # self.brake_motor()
+        pass
 
 class SensorArray:
     def __init__(self, sensors):
@@ -82,7 +82,7 @@ class PIDController:
         self.kd = 0.1
         self.last_error = 0.0
         self.integral = 0.0
-        self.error_history = deque(maxlen=50)
+        self.error_history = deque([], 50)  # Keep last 50 error values for tuning
         self.tuning = True
 
     def compute(self, error, delta_time):
@@ -120,8 +120,6 @@ class PIDController:
         else:
             # Stop tuning when average error is acceptable
             self.tuning = False
-            self.logger.info("PID tuning completed with Kp: {:.2f}, Ki: {:.4f}, Kd: {:.2f}".format(
-                self.kp, self.ki, self.kd))
 
 class EnhancedLineFollower(Controller):
     def __init__(self, logger):
@@ -135,15 +133,6 @@ class EnhancedLineFollower(Controller):
         self.logger.info("Starting line following")
         try:
             while True:
-                # Check NEAR sensor
-                if self.NEAR.value() == 0:
-                    self.logger.info("Obstacle detected. Stopping.")
-                    self.stop_and_brake()
-                    while self.NEAR.value() == 0:
-                        # Wait until obstacle is removed
-                        time.sleep_ms(100)
-                    self.logger.info("Obstacle cleared. Resuming.")
-
                 sensors = self.sensor_array.read()
 
                 # Calculate line position error
